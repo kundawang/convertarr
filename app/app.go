@@ -1,8 +1,10 @@
 package app
 
 import (
+	"context"
 	"encoder/m"
 	"encoder/t"
+	"sync"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -36,4 +38,28 @@ var AwaitForFileCopyChan = make(chan string)
 
 var PreloadedFiles *t.TPreloadedFiles = &t.TPreloadedFiles{
 	List: []*t.PreloadedFile{},
+}
+
+var currentEncodingCancelMu sync.Mutex
+var currentEncodingCancel context.CancelFunc
+
+// SetCurrentEncodingCancel registers the cancel function of the currently
+// running encode (nil when idle).
+func SetCurrentEncodingCancel(cancel context.CancelFunc) {
+	currentEncodingCancelMu.Lock()
+	defer currentEncodingCancelMu.Unlock()
+	currentEncodingCancel = cancel
+}
+
+// CancelCurrentEncoding cancels the currently running encode, if any.
+// Returns true when an encode was in progress.
+func CancelCurrentEncoding() bool {
+	currentEncodingCancelMu.Lock()
+	defer currentEncodingCancelMu.Unlock()
+	if currentEncodingCancel == nil {
+		return false
+	}
+	currentEncodingCancel()
+	currentEncodingCancel = nil
+	return true
 }

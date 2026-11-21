@@ -54,6 +54,7 @@ func Serve() {
 	e.GET("/setup", handler.GetSetup)
 	e.POST("/setup", handler.PostSetup)
 	e.POST("/scanner", handler.PostScanner)
+	e.POST("/encoding/cancel", handler.PostEncodingCancel)
 	e.GET("/history", handler.GetHistory)
 	e.GET("/history/table", handler.GetHistoryTable)
 	e.GET("/setting", handler.GetSetting)

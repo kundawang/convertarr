@@ -1,6 +1,7 @@
 package m
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/labstack/gommon/log"
@@ -90,6 +91,17 @@ func (j *History) SetHash(DB *gorm.DB, Hash string) error {
 
 func (j *History) Encoding(DB *gorm.DB) error {
 	j.Status = "encoding"
+	if err := DB.Save(j).Error; err != nil {
+		log.Error("Failed to save history", err)
+		return err
+	}
+	return nil
+}
+
+// EncodingPass marks the history as running the given pass of a multi-pass
+// (e.g. two-pass target size) encode, eg. "encoding pass 1/2".
+func (j *History) EncodingPass(DB *gorm.DB, pass int, total int) error {
+	j.Status = fmt.Sprintf("encoding pass %d/%d", pass, total)
 	if err := DB.Save(j).Error; err != nil {
 		log.Error("Failed to save history", err)
 		return err

@@ -37,15 +37,17 @@ type SettingValue struct {
 	PreCopyFileCount int
 
 	// encoding
-	EnableEncoding          bool
-	EnableHevcEncoding      bool
-	EnableNvidiaGpuEncoding bool
-	EnableAmdGpuEncoding    bool
-	EnableImageComparison   bool
-	EncodingThreads         int
-	EncodingCrf             int
-	EncodingResolution      int
-	EncodingMaxRetry        int
+	EnableEncoding           bool
+	EnableHevcEncoding       bool
+	EnableNvidiaGpuEncoding  bool
+	EnableAmdGpuEncoding     bool
+	EnableImageComparison    bool
+	EnableTargetSizeEncoding bool
+	EncodingThreads          int
+	EncodingCrf              int
+	EncodingResolution       int
+	EncodingMaxRetry         int
+	EncodingTargetSizeMB     int
 }
 
 func (j *SettingValue) Scan(value interface{}) error {

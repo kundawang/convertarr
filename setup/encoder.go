@@ -20,6 +20,11 @@ import (
 
 func Encoder() {
 	go func() {
+		// clean up passlog files left behind by a crashed or killed
+		// two-pass encode
+		if n := helper.CleanupStalePasslogs(os.TempDir()); n > 0 {
+			log.Infof("Removed %d stale two-pass passlog file(s) from previous runs", n)
+		}
 		// update old states of histories on startup
 		var histories []m.History
 		if err := app.DB.
@@ -177,7 +182,19 @@ func encodeFile(file string) {
 	}
 
 	startTime := time.Now()
-	if err := helper.Encode(tmpInput, tmpOutput, history); err != nil {
+	encodeCtx, cancelEncode := context.WithCancel(context.Background())
+	app.SetCurrentEncodingCancel(cancelEncode)
+	defer func() {
+		app.SetCurrentEncodingCancel(nil)
+		cancelEncode()
+	}()
+	if err := helper.Encode(encodeCtx, tmpInput, tmpOutput, history); err != nil {
+		if encodeCtx.Err() != nil {
+			if err := history.Failed(app.DB, "Encoding cancelled by user"); err != nil {
+				log.Errorf("Failed to update history %v\n", err)
+			}
+			return
+		}
 		if err := history.Failed(app.DB, err.Error()); err != nil {
 			log.Errorf("Failed to update history %v\n", err)
 		}

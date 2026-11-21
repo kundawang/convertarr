@@ -5,6 +5,7 @@ import (
 	"encoder/m"
 	"github.com/dustin/go-humanize"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -60,6 +61,10 @@ templ HistoryTable(Ctx t.TemplCtx, histories []m.History) {
 						switch history.Status {
 							case "encoding":
 								<span class="tag is-link">{ fmt.Sprintf("%.0f%%", history.Progress * 100) } { history.Status }</span>
+							case "encoding pass 1/2":
+								<span class="tag is-link">{ fmt.Sprintf("%.0f%%", history.Progress * 100) } { history.Status }</span>
+							case "encoding pass 2/2":
+								<span class="tag is-link">{ fmt.Sprintf("%.0f%%", history.Progress * 100) } { history.Status }</span>
 							case "copy":
 								<span class="tag is-link">{ history.Status }</span>
 							case "probe":
@@ -70,6 +75,11 @@ templ HistoryTable(Ctx t.TemplCtx, histories []m.History) {
 								<span class="tag is-success">{ history.Status }</span>
 							default:
 								<span class="tag">{ history.Status }</span>
+						}
+						if strings.HasPrefix(history.Status, "encoding") {
+							<form method="POST" action="/encoding/cancel" style="display: inline;">
+								<button type="submit" class="button is-danger is-small">Cancel</button>
+							</form>
 						}
 					</td>
 				</tr>

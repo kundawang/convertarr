@@ -15,7 +15,12 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-func TempSock(totalDuration float64, sockFileName string, encodingTask *m.History) string {
+// TempSock listens on a unix socket for ffmpeg -progress reports and writes
+// the progress into the given history entry. progressOffset and progressScale
+// map the raw 0..1 ffmpeg progress into a sub-range of the overall job
+// progress (single pass: 0/1, two-pass: 0/0.5 for pass 1 and 0.5/0.5 for
+// pass 2).
+func TempSock(totalDuration float64, sockFileName string, encodingTask *m.History, progressOffset, progressScale float64) string {
 	sockFilePath := path.Join(os.TempDir(), sockFileName)
 	l, err := net.Listen("unix", sockFilePath)
 	if err != nil {
@@ -56,6 +61,10 @@ func TempSock(totalDuration float64, sockFileName string, encodingTask *m.Histor
 				floatProg, err := strconv.ParseFloat(progress, 64)
 				if err != nil {
 					fmt.Println("could not save progress in database")
+				}
+				floatProg = progressOffset + floatProg*progressScale
+				if floatProg > 1 {
+					floatProg = 1
 				}
 				if floatProg != 0 {
 					encodingTask.SetProgress(app.DB, floatProg)

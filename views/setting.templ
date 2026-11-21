@@ -174,6 +174,33 @@ templ Setting(Ctx t.TemplCtx, Title string, v t.SettingValidator) {
 								</div>
 								<p class="help">Controls the output quality. Lower values mean higher quality and larger file sizes. A sane range is 18-28. Default is 25.</p>
 							</div>
+
+							<div class="field">
+								<label class="checkbox">
+									<input
+										type="checkbox"
+										name="EnableTargetSizeEncoding"
+										checked?={ helper.PStrToStr(v.EnableTargetSizeEncoding) == "checked" || helper.PStrToStr(v.EnableTargetSizeEncoding) == "on" }
+									/>
+									<strong>Enable Target File Size (Two-Pass)</strong>
+								</label>
+								<p class="help">Encode to a fixed target file size instead of a fixed quality (CRF). The video bitrate is budgeted from the video duration and the retained audio tracks, then encoded in two passes. Only works with software H.264 encoding (no HEVC, no GPU).</p>
+							</div>
+							<div class="field">
+								<label class="label">Target File Size (MB)</label>
+								<div class="control">
+									<input
+										class="input"
+										type="number"
+										name="EncodingTargetSizeMB"
+										style="max-width: 400px;"
+										value={ templ.EscapeString(fmt.Sprint(v.EncodingTargetSizeMB)) }
+										min="1"
+										max="51200"
+									/>
+								</div>
+								<p class="help">The maximum size of the encoded file in megabytes (e.g. 50 for platforms that only accept uploads up to 50 MB). Only used when Target File Size encoding is enabled.</p>
+							</div>
 							<div class="field">
 								<label class="label">Output Resolution (Width)</label>
 								<div class="control">

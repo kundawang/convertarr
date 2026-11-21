@@ -68,6 +68,18 @@ func GetSetting(c echo.Context) error {
 		v.EnableImageComparison = nil
 	}
 
+	if app.Setting.EnableTargetSizeEncoding {
+		v.EnableTargetSizeEncoding = &on
+	} else {
+		v.EnableTargetSizeEncoding = nil
+	}
+
+	if app.Setting.EncodingTargetSizeMB <= 0 {
+		v.EncodingTargetSizeMB = 50
+	} else {
+		v.EncodingTargetSizeMB = app.Setting.EncodingTargetSizeMB
+	}
+
 	if app.Setting.EncodingCrf <= 0 {
 		v.EncodingCrf = 25
 	} else {
@@ -207,6 +219,24 @@ func PostSetting(c echo.Context) error {
 		)
 	}
 
+	if v.EnableTargetSizeEncoding != nil && *v.EnableTargetSizeEncoding == "on" {
+		settingTmp.EnableTargetSizeEncoding = true
+	} else {
+		settingTmp.EnableTargetSizeEncoding = false
+	}
+
+	if settingTmp.EnableTargetSizeEncoding &&
+		(settingTmp.EnableHevcEncoding || settingTmp.EnableAmdGpuEncoding || settingTmp.EnableNvidiaGpuEncoding) {
+		return helper.Render(c,
+			http.StatusBadRequest,
+			views.Setting(
+				helper.TCtxWError(c, errors.New("target file size (two-pass) encoding only works with software H.264 encoding; disable HEVC and GPU encoding first")),
+				fmt.Sprintf("%s - Setting", app.Name),
+				v,
+			),
+		)
+	}
+
 	// Check for GPU encoder availability before saving settings
 	if settingTmp.EnableAmdGpuEncoding {
 		codecToCheck := "h264_vaapi"
@@ -268,6 +298,7 @@ func PostSetting(c echo.Context) error {
 		settingTmp.EncodingThreads = v.EncodingThreads
 		settingTmp.EncodingMaxRetry = v.EncodingMaxRetry
 		settingTmp.PreCopyFileCount = v.PreCopyFileCount
+		settingTmp.EncodingTargetSizeMB = v.EncodingTargetSizeMB
 	}
 
 	var setting m.Setting
